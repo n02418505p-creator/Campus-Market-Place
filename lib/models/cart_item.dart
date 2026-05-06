@@ -1,3 +1,7 @@
+// lib/models/cart_item.dart
+// Created by: Tinoidaishe Mwenga
+// Student ID: N02422373H
+
 import 'product.dart';
 
 class CartItem {
