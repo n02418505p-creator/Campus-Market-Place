@@ -1,4 +1,292 @@
-// lib/screens/admin/admin_dashboard.dart
+// // lib/screens/checkout_screen.dart
+// Created by: Blessings Hoto
+// Student ID: N02423763T
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import '../services/auth_service.dart';
+import '../services/cart_service.dart';
+import '../services/database_service.dart';
+
+class CheckoutScreen extends StatefulWidget {
+  const CheckoutScreen({super.key});
+
+  @override
+  State<CheckoutScreen> createState() => _CheckoutScreenState();
+}
+
+class _CheckoutScreenState extends State<CheckoutScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _addressController = TextEditingController();
+  String _paymentMethod = 'Credit Card';
+  bool _isProcessing = false;
+
+  final List<String> _paymentMethods = [
+    'Credit Card',
+    'Debit Card',
+    'Cash on Delivery',
+    'Mobile Money',
+  ];
+
+  Future<void> _placeOrder() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() => _isProcessing = true);
+    
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final cartService = Provider.of<CartService>(context, listen: false);
+    final dbService = DatabaseService.instance;
+    
+    final orderDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+    
+    await dbService.insert('orders', {
+      'username': authService.currentUser,
+      'address': _addressController.text.trim(),
+      'total_amount': cartService.totalAmount,
+      'payment_method': _paymentMethod,
+      'order_date': orderDate,
+    });
+    
+    final userResult = await dbService.query(
+      'users',
+      where: 'username = ?',
+      whereArgs: [authService.currentUser],
+    );
+    if (userResult.isNotEmpty) {
+      await cartService.clearCart(userResult.first['id'] as int);
+    }
+    
+    setState(() => _isProcessing = false);
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Color(0xFF17A2B8)),
+            SizedBox(width: 8),
+            Text('Order Confirmed!'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Thank you for your purchase!'),
+            const SizedBox(height: 16),
+            Text('Order Date: $orderDate'),
+            Text('Total: \$${cartService.totalAmount.toStringAsFixed(2)}'),
+            Text('Payment: $_paymentMethod'),
+            const SizedBox(height: 16),
+            const Text('You will receive a confirmation email shortly.'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, '/home');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1E88E5),
+            ),
+            child: const Text('Continue Shopping'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cartService = Provider.of<CartService>(context);
+    
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDEDED),
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        backgroundColor: const Color(0xFF17A2B8),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Order Summary',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0B3C5D),
+                        ),
+                      ),
+                      const Divider(),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: cartService.cartItems.length,
+                        itemBuilder: (context, index) {
+                          final item = cartService.cartItems[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${item.product.name} x${item.quantity}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                                Text(
+                                  '\$${item.subtotal.toStringAsFixed(2)}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF17A2B8)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total:',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0B3C5D),
+                            ),
+                          ),
+                          Text(
+                            '\$${cartService.totalAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF17A2B8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Delivery Address',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0B3C5D),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _addressController,
+                        decoration: const InputDecoration(
+                          labelText: 'Address',
+                          prefixIcon: Icon(Icons.location_on_outlined, color: Color(0xFF0B3C5D)),
+                        ),
+                        maxLines: 3,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your delivery address';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Payment Method',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0B3C5D),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _paymentMethod,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.payment, color: Color(0xFF0B3C5D)),
+                        ),
+                        items: _paymentMethods.map((method) {
+                          return DropdownMenuItem(
+                            value: method,
+                            child: Text(method),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _paymentMethod = value!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _isProcessing ? null : _placeOrder,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E88E5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isProcessing
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Place Order'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    super.dispose();
+  }
+}
 // Created by: Owen K. Murewa
 // Student ID: N02419341C
 
