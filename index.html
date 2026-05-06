@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>NUST Campus Marketplace</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f7fafc;
+            padding-bottom: 70px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 0 0 25px 25px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            background: white;
+            margin: -15px 16px 16px 16px;
+            padding: 12px 16px;
+            border-radius: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 12px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 16px;
+        }
+
+        /* Category Pills */
+        .categories {
+            padding: 0 16px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+
+        .category-pill {
+            display: inline-block;
+            background: white;
+            padding: 8px 20px;
+            margin-right: 10px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d3748;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .category-pill.active {
+            background: #2f855a;
+            color: white;
+        }
+
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            padding: 0 16px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .product-image {
+            height: 140px;
+            background: linear-gradient(135deg, #e6f7f0 0%, #d1f0e3 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+        }
+
+        .product-info {
+            padding: 12px;
+        }
+
+        .product-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #1a202c;
+        }
+
+        .product-price {
+            color: #2f855a;
+            font-weight: 700;
+            font-size: 16px;
+            margin: 6px 0;
+        }
+
+        .seller {
+            font-size: 11px;
+            color: #718096;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .category-tag {
+            display: inline-block;
+            background: #edf2f7;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-top: 6px;
+            color: #4a5568;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .nav-item {
+            text-align: center;
+            color: #a0aec0;
+            transition: color 0.2s;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 12px;
+        }
+
+        .nav-item.active {
+            color: #2f855a;
+        }
+
+        .nav-item i {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* FAB Button */
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: #2f855a;
+            color: white;
+            border: none;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(47,133,90,0.4);
+            transition: transform 0.2s;
+            z-index: 100;
+        }
+
+        .fab:hover {
+            transform: scale(1.05);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            🛍️ NUST Market
+            <span class="badge">NUST Only</span>
+        </h1>
+        <p style="font-size: 14px; margin-top: 8px; opacity: 0.9;">Buy & sell with verified NUST students</p>
+    </div>
+
+    <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="Search textbooks, laptops..." id="searchInput" onkeyup="filterProducts()">
+    </div>
+
+    <div class="categories" id="categories">
+        <!-- Categories loaded by JS -->
+    </div>
+
+    <div class="product-grid" id="productGrid">
+        <!-- Products loaded by JS -->
+    </div>
+
+    <button class="fab" onclick="openSellModal()">+</button>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="setActiveNav(this, 'home')">
+            <i>🏠</i>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="setActiveNav(this, 'chat')">
+            <i>💬</i>
+            <span>Chat</span>
+        </button>
+        <button class="nav-item" onclick="setActiveNav(this, 'saved')">
+            <i>❤️</i>
+            <span>Saved</span>
+        </button>
+        <button class="nav-item" onclick="setActiveNav(this, 'profile')">
+            <i>👤</i>
+            <span>Profile</span>
+        </button>
+    </div>
+
+    <!-- Sell Modal -->
+    <div class="modal" id="sellModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 16px;">📦 Sell an Item</h2>
+            <input type="text" id="itemTitle" placeholder="Item title">
+            <input type="number" id="itemPrice" placeholder="Price (₨)">
+            <select id="itemCategory">
+                <option value="Textbooks">📚 Textbooks</option>
+                <option value="Electronics">💻 Electronics</option>
+                <option value="Furniture">🪑 Furniture</option>
+                <option value="Services">🛠️ Services</option>
+                <option value="Ride Share">🚗 Ride Share</option>
+                <option value="Other">📦 Other</option>
+            </select>
+            <div class="modal-buttons">
+                <button onclick="closeSellModal()" style="background:#e2e8f0;">Cancel</button>
+                <button onclick="addProduct()" style="background:#2f855a; color:white;">List Item</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let products = [
+            { id: 1, title: "Engineering Mathematics", price: 850, category: "Textbooks", seller: "ali.raza", emoji: "📚", date: "2025-05-01" },
+            { id: 2, title: "MacBook Pro 2022", price: 125000, category: "Electronics", seller: "sarah.khan", emoji: "💻", date: "2025-05-02" },
+            { id: 3, title: "Study Desk with Chair", price: 4500, category: "Furniture", seller: "ahmed.malik", emoji: "🪑", date: "2025-05-01" },
+            { id: 4, title: "Calculus Solutions Guide", price: 350, category: "Textbooks", seller: "zain.ali", emoji: "📖", date: "2025-05-03" },
+            { id: 5, title: "iPhone 13 Pro Max", price: 165000, category: "Electronics", seller: "fatima.khan", emoji: "📱", date: "2025-05-02" },
+            { id: 6, title: "Programming Fundamentals", price: 600, category: "Textbooks", seller: "bilal.ahmed", emoji: "💻", date: "2025-05-04" },
+        ];
+
+        let activeCategory = "All";
+        let searchTerm = "";
+
+        function displayCategories() {
+            const categories = ["All", "Textbooks", "Electronics", "Furniture", "Services", "Ride Share", "Other"];
+            const container = document.getElementById('categories');
+            container.innerHTML = categories.map(cat => 
+                `<div class="category-pill ${activeCategory === cat ? 'active' : ''}" onclick="filterByCategory('${cat}')">${cat}</div>`
+            ).join('');
+        }
+
+        function filterByCategory(category) {
+            activeCategory = category;
+            displayCategories();
+            displayProducts();
+        }
+
+        function filterProducts() {
+            searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            displayProducts();
+        }
+
+        function displayProducts() {
+            let filtered = products;
+            
+            if (activeCategory !== "All") {
+                filtered = filtered.filter(p => p.category === activeCategory);
+            }
+            
+            if (searchTerm) {
+                filtered = filtered.filter(p => p.title.toLowerCase().includes(searchTerm));
+            }
+            
+            const container = document.getElementById('productGrid');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px;">🔍 No items found</div>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(product => `
+                <div class="product-card" onclick="viewProduct(${product.id})">
+                    <div class="product-image">${product.emoji}</div>
+                    <div class="product-info">
+                        <div class="product-title">${product.title}</div>
+                        <div class="product-price">₨ ${product.price.toLocaleString()}</div>
+                        <div class="seller">👤 ${product.seller}</div>
+                        <span class="category-tag">${product.category}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewProduct(id) {
+            const product = products.find(p => p.id === id);
+            alert(`📱 ${product.title}\n\nPrice: ₨ ${product.price.toLocaleString()}\nSeller: ${product.seller}\nCategory: ${product.category}\n\n💬 Message seller to arrange pickup!\n\n(Full app features coming soon: chat, payment, & student verification)`);
+        }
+
+        function openSellModal() {
+            document.getElementById('sellModal').style.display = 'flex';
+        }
+
+        function closeSellModal() {
+            document.getElementById('sellModal').style.display = 'none';
+            document.getElementById('itemTitle').value = '';
+            document.getElementById('itemPrice').value = '';
+        }
+
+        function addProduct() {
+            const title = document.getElementById('itemTitle').value;
+            const price = parseInt(document.getElementById('itemPrice').value);
+            const category = document.getElementById('itemCategory').value;
+            
+            if (!title || !price) {
+                alert("Please fill in title and price");
+                return;
+            }
+            
+            const emojis = {
+                "Textbooks": "📚",
+                "Electronics": "💻", 
+                "Furniture": "🪑",
+                "Services": "🛠️",
+                "Ride Share": "🚗",
+                "Other": "📦"
+            };
+            
+            const newProduct = {
+                id: products.length + 1,
+                title: title,
+                price: price,
+                category: category,
+                seller: "current_user",  // Will be actual NUST email in final version
+                emoji: emojis[category] || "📦",
+                date: new Date().toISOString().split('T')[0]
+            };
+            
+            products.unshift(newProduct); // Add to top
+            closeSellModal();
+            displayProducts();
+            alert("✅ Item listed! Other NUST students can now see it.");
+        }
+
+        function setActiveNav(btn, page) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // In full app, this would navigate pages
+            if (page !== 'home') {
+                alert(`${page.charAt(0).toUpperCase() + page.slice(1)} feature coming in next update!`);
+            }
+        }
+
+        // Initialize
+        displayCategories();
+        displayProducts();
+    </script>
+</body>
+</html>
